@@ -100,7 +100,7 @@ public class Matrix {
 		sb.append(m).append(' ');
 		sb.append(n).append(' ');
 		
-		DecimalFormat df = new DecimalFormat("###.0#####", new DecimalFormatSymbols(Locale.US));
+		DecimalFormat df = new DecimalFormat("##0.0#####", new DecimalFormatSymbols(Locale.US));
 		
 		for(int i = 0; i < m; i++){
 			for(int j = 0; j < n; j++){
@@ -116,6 +116,10 @@ public class Matrix {
 	
 	public double get(int i, int j) {
 		return arr[i][j];
+	}
+	
+	public void set(int i, int j, double x) {
+		arr[i][j] = x;
 	}
 
 

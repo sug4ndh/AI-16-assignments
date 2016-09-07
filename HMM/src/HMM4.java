@@ -19,8 +19,8 @@ public class HMM4 {
 		
 		lambda.optimize(O);
 		
-		lambda.printA();
-		lambda.printB();
+		System.out.println(lambda.printA());
+		System.out.println(lambda.printB());
 
 	}
 

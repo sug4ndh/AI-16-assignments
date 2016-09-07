@@ -1,5 +1,2 @@
-Exception in thread "main" java.lang.Exception: Failed to parse message in readMessage:
-4 4 0.4 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.2 0.2 0.4 
-	at Client.processMessage(Client.java:154)
-	at Client.run(Client.java:27)
-	at Main.main(Main.java:74)
+4 4 0.546358 0.453642 0.0 0.0 0.0 0.508081 0.491919 0.0 0.0 0.0 0.506873 0.493127 0.476732 0.0 0.0 0.523267
+4 4 0.546328 0.002728 0.0 0.0 0.0 0.508061 0.002241 0.0 0.0 0.0 0.506841 0.002956 0.002218 0.0 0.0 0.52325

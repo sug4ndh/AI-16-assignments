@@ -22,13 +22,15 @@ public class Lambda {
 	private double[][][] di_gamma;
 	private double[][] gamma;
 	
-	private int N = A.m();
-	private int M = B.n();
+	private int N;
+	private int M;
 
 	public Lambda(Matrix A, Matrix B, Matrix pi) {
 		this.A = A;
 		this.B = B;
 		this.pi = pi;
+		this.N = A.m();
+		this.M = B.n();
 	}
 
 	// public Lambda(Matrix A, Matrix B, Matrix pi, int[] O) {
@@ -40,6 +42,8 @@ public class Lambda {
 		this.A = new Matrix(sc);
 		this.B = new Matrix(sc);
 		this.pi = new Matrix(sc);
+		this.N = A.m();
+		this.M = B.n();
 	}
 
 	public String printA() {
@@ -233,11 +237,8 @@ public class Lambda {
 	
 		int T = O.length;
 		
-		for(int i = 0; i < N; i++){
-			pi = new Matrix(Arrays.copyOf(gamma[0], N));
-		}
-		
-		
+		pi = new Matrix(Arrays.copyOf(gamma[0], N));
+	
 		for(int i = 0; i < N; i++){
 			for(int j = 0; j < N; j++){
 				double num = 0, denom = 0;
@@ -247,7 +248,7 @@ public class Lambda {
 					denom += gamma[t][i];
 				}
 				
-				alpha[i][j] = num/denom;
+				A.set(i, j, num/denom);
 				
 			}
 		}
@@ -262,7 +263,7 @@ public class Lambda {
 					denom += gamma[t][i];
 				}
 				
-				beta[i][j] = num/denom;
+				B.set(i, j, num/denom);
 				
 			}
 		}
@@ -281,6 +282,14 @@ public class Lambda {
 	}
 	
 	public void optimize(int[] O) {
+		
+		for(int i = 0; i < 6; i++){
+			forward(O);
+			backward(O);
+			gammas(O);
+			fixit(O);
+		}
+		
 		double niveau, currniveau = 0;
 		do {
 			niveau = currniveau;
@@ -289,7 +298,7 @@ public class Lambda {
 			gammas(O);
 			fixit(O);
 			currniveau = measure();
-		} while (niveau < currniveau);
+		} while ((niveau / currniveau)-1 > 0.0001);
 
 	}
 	
