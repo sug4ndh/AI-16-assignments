@@ -1,6 +1,8 @@
 import java.util.Arrays;
 import java.util.Scanner;
 
+import com.sun.prism.MaskTextureGraphics;
+
 /***
  * 
  * @author Daniel Stüwe - used pseudo code from the HMM paper of Mark Stamp
@@ -15,11 +17,13 @@ public class Lambda {
 	private Matrix pi;
 
 	private double[][] alpha;
+	private double[] c;
 	private double[][] beta;
 	private double[][][] di_gamma;
 	private double[][] gamma;
 	
 	private int N = A.m();
+	private int M = B.n();
 
 	public Lambda(Matrix A, Matrix B, Matrix pi) {
 		this.A = A;
@@ -55,7 +59,7 @@ public class Lambda {
 		int N = A.m(), T = O.length;
 		alpha = new double[T][N];
 
-		double[] c = new double[T];
+		c = new double[T];
 
 		// compute alpha[0][i]
 		for (int i = 0; i < N; i++) {
@@ -155,7 +159,7 @@ public class Lambda {
 		return X_opt;
 	}
 
-	private double[][] backward(int[] O, double[] c) {
+	private double[][] backward(int[] O) {
 
 		int T = O.length;
 		beta = new double[T][N];
@@ -180,7 +184,7 @@ public class Lambda {
 		return beta;
 	}
 	
-	private void gammas(int[] O, double[] c) {
+	private void gammas(int[] O) {
 
 		int T = O.length;
 		di_gamma = new double[T-1][N][N];
@@ -221,7 +225,9 @@ public class Lambda {
 		
 	}
 	
-	private void fixit() {
+	private void fixit(int[] O) {
+	
+		int T = O.length;
 		
 		for(int i = 0; i < N; i++){
 			pi = new Matrix(Arrays.copyOf(gamma[0], N));
@@ -232,10 +238,56 @@ public class Lambda {
 			for(int j = 0; j < N; j++){
 				double num = 0, denom = 0;
 				
+				for(int t = 0; t < T - 1; t++){
+					num += di_gamma[t][i][j];
+					denom += gamma[t][i];
+				}
 				
+				alpha[i][j] = num/denom;
+				
+			}
+		}
+		
+
+		for(int i = 0; i < N; i++){
+			for(int j = 0; j < M; j++){
+				double num = 0, denom = 0;
+				
+				for(int t = 0; t < T - 1; t++){
+					num += (O[t] == j) ? di_gamma[t][i][j] : 0;
+					denom += gamma[t][i];
+				}
+				
+				beta[i][j] = num/denom;
 				
 			}
 		}
 	}
+	
+	public double measure() {
+		
+		double magic = 0;
+		int T = c.length;
+		
+		for(int i = 0; i < T; i++){
+			magic += Math.log(c[i]);
+		}
+		
+		return -magic;
+	}
+	
+	public void optimize(int[] O) {
+		double niveau, currniveau = 0;
+		do {
+			niveau = currniveau;
+			forward(O);
+			backward(O);
+			gammas(O);
+			fixit(O);
+			currniveau = measure();
+		} while (niveau < currniveau);
+
+	}
+	
 	
 }
