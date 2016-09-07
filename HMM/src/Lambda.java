@@ -45,6 +45,10 @@ public class Lambda {
 	public String printA() {
 		return A.toString();
 	}
+	
+	public String printB() {
+		return B.toString();
+	}
 
 	public String print_pi() {
 		return pi.toString();

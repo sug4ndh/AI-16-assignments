@@ -17,9 +17,10 @@ public class HMM4 {
 			O[i] = sc.nextInt();
 		}
 		
-		for(int i : lambda.delta(O)){
-			System.out.print(i + " ");
-		}
+		lambda.optimize(O);
+		
+		lambda.printA();
+		lambda.printB();
 
 	}
 
