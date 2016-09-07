@@ -18,6 +18,8 @@ public class Lambda {
 	private double[][] beta;
 	private double[][][] di_gamma;
 	private double[][] gamma;
+	
+	private int N = A.m();
 
 	public Lambda(Matrix A, Matrix B, Matrix pi) {
 		this.A = A;
@@ -153,9 +155,9 @@ public class Lambda {
 		return X_opt;
 	}
 
-	private double[] backward(int[] O, double[] c) {
+	private double[][] backward(int[] O, double[] c) {
 
-		int N = A.m(), T = O.length;
+		int T = O.length;
 		beta = new double[T][N];
 
 		// Initialize beta[T-1][i]
@@ -173,28 +175,67 @@ public class Lambda {
 				// scale the beta[t][i]
 				beta[t][i] *= c[t];
 			}
-		}
+		} 
 		
 		return beta;
 	}
 	
-	private double[] gammas(int[] O, double[] c) {
+	private void gammas(int[] O, double[] c) {
 
-		int N = A.m(), T = O.length;
+		int T = O.length;
 		di_gamma = new double[T-1][N][N];
-		gamma = new double[t][N];
+		gamma = new double[T][N];
 		
-		for(int t = 0; i < T-1){
-			double denom;
+		for(int t = 0; t < T-1; t++){
+			// Denominator is different from formula because of scaling
+			double denom = 0;
 			for(int i = 0; i < N; i++){
 				for (int j = 0; j < N; j++) {
 					denom += alpha[t][i] * A.get(i, j) * B.get(j, O[t+1]) * beta[t+1][j];
 				}
 			}
+			
+			denom = 1/denom;
+
+			for(int i = 0; i < N; i++){
+				for (int j = 0; j < N; j++) {
+					di_gamma[t][i][j] = alpha[t][i] * A.get(i, j) * B.get(j, O[t+1]) *
+							beta[t+1][j] * denom;
+					gamma[t][i] += di_gamma[t][i][j]; 
+				}
+			} 
+		
+		}
+		
+		// no di_gamme here
+		double denom = 0;
+		for (double a : alpha[T-1]) {
+			denom += a;
+		}
+		
+		denom = 1/denom;
+		
+		for (int i = 0; i < N; i++) {
+			gamma[T-1][i] = alpha[T-1][i]*denom;
 		}
 		
 	}
 	
-	
+	private void fixit() {
+		
+		for(int i = 0; i < N; i++){
+			pi = new Matrix(Arrays.copyOf(gamma[0], N));
+		}
+		
+		
+		for(int i = 0; i < N; i++){
+			for(int j = 0; j < N; j++){
+				double num = 0, denom = 0;
+				
+				
+				
+			}
+		}
+	}
 	
 }

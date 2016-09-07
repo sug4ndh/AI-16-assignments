@@ -57,11 +57,19 @@ public class Matrix {
 	 * 
 	 * @param arr matrix like (n x m) array, property is unchecked!
 	 */
-	private Matrix(double[][] arr) {
+	public Matrix(double[][] arr) {
 		this.m = arr.length;
 		this.n = arr[0].length;
 		
 		this.arr = arr;
+	}
+	
+	public Matrix(double[] arr) {
+		this.m = 1;
+		this.n = arr.length;
+		this.arr = new double[1][];
+		
+		this.arr[0] = arr;
 	}
 	
 	/***
