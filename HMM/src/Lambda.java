@@ -16,7 +16,7 @@ public class Lambda {
 
 	private double[][] alpha;
 	private double[][] beta;
-	private double[][] di_gamma;
+	private double[][][] di_gamma;
 	private double[][] gamma;
 
 	public Lambda(Matrix A, Matrix B, Matrix pi) {
@@ -153,7 +153,7 @@ public class Lambda {
 		return X_opt;
 	}
 
-	public double backward(int[] O, double[] c) {
+	private double[] backward(int[] O, double[] c) {
 
 		int N = A.m(), T = O.length;
 		beta = new double[T][N];
@@ -166,23 +166,35 @@ public class Lambda {
 		// compute beta[t][i]
 		for (int t = T - 2; t >= 0; t--) {
 			for (int i = 0; i < N; i++) {
-
 				for (int j = 0; j < N; j++) {
-					beta[t][i] += beta[t + 1][j] * A.get(j, i) * B.get(i, j);
+					beta[t][i] += beta[t + 1][j] * A.get(i, j) * B.get(j, O[t]);
 				}
 
-				beta[t][i] *= B.get(i, O[t]);
-				c[t] += beta[t][i];
-			}
-
-			// scale the beta[t][i]
-			c[t] = 1 / c[t];
-			for (int i = 0; i < N; i++) {
+				// scale the beta[t][i]
 				beta[t][i] *= c[t];
 			}
 		}
-
-		return 1 / Arrays.stream(c).reduce(1, (a, b) -> a * b);
+		
+		return beta;
 	}
+	
+	private double[] gammas(int[] O, double[] c) {
 
+		int N = A.m(), T = O.length;
+		di_gamma = new double[T-1][N][N];
+		gamma = new double[t][N];
+		
+		for(int t = 0; i < T-1){
+			double denom;
+			for(int i = 0; i < N; i++){
+				for (int j = 0; j < N; j++) {
+					denom += alpha[t][i] * A.get(i, j) * B.get(j, O[t+1]) * beta[t+1][j];
+				}
+			}
+		}
+		
+	}
+	
+	
+	
 }
