@@ -1,8 +1,6 @@
 import java.util.Arrays;
 import java.util.Scanner;
 
-import com.sun.prism.MaskTextureGraphics;
-
 /***
  * 
  * @author Daniel Stüwe - used pseudo code from the HMM paper of Mark Stamp
@@ -64,7 +62,7 @@ public class Lambda {
 
 	public double forward(int[] O) {
 
-		int N = A.m(), T = O.length;
+		int T = O.length;
 		alpha = new double[T][N];
 
 		c = new double[T];
@@ -105,7 +103,7 @@ public class Lambda {
 
 	public int[] delta(int[] O) {
 
-		int N = A.m(), T = O.length;
+		int T = O.length;
 		double[][] delta = new double[T][N];
 		int[][] deltaArg = new int[T - 1][N];
 
@@ -181,7 +179,7 @@ public class Lambda {
 		for (int t = T - 2; t >= 0; t--) {
 			for (int i = 0; i < N; i++) {
 				for (int j = 0; j < N; j++) {
-					beta[t][i] += beta[t + 1][j] * A.get(i, j) * B.get(j, O[t]);
+					beta[t][i] += beta[t + 1][j]  * B.get(j, O[t+1]) * A.get(i, j);
 				}
 
 				// scale the beta[t][i]
@@ -207,16 +205,19 @@ public class Lambda {
 				}
 			}
 			
-			denom = 1/denom;
+//			for(int i = 0; i < N; i++){
+//				denom += alpha[T-1][i];
+//			}
+			
+			// denom = 1/denom;
 
 			for(int i = 0; i < N; i++){
 				for (int j = 0; j < N; j++) {
 					di_gamma[t][i][j] = alpha[t][i] * A.get(i, j) * B.get(j, O[t+1]) *
-							beta[t+1][j] * denom;
+							beta[t+1][j] / denom; // * denom;
 					gamma[t][i] += di_gamma[t][i][j]; 
 				}
 			} 
-		
 		}
 		
 		// no di_gamme here
@@ -225,10 +226,10 @@ public class Lambda {
 			denom += a;
 		}
 		
-		denom = 1/denom;
+		// denom = 1/denom;
 		
 		for (int i = 0; i < N; i++) {
-			gamma[T-1][i] = alpha[T-1][i]*denom;
+			gamma[T-1][i] = alpha[T-1][i] / denom; // *denom;
 		}
 		
 	}
@@ -237,7 +238,7 @@ public class Lambda {
 	
 		int T = O.length;
 		
-		pi = new Matrix(Arrays.copyOf(gamma[0], N));
+		pi = new Matrix(gamma[0]); // safe link
 	
 		for(int i = 0; i < N; i++){
 			for(int j = 0; j < N; j++){
@@ -259,7 +260,7 @@ public class Lambda {
 				double num = 0, denom = 0;
 				
 				for(int t = 0; t < T - 1; t++){
-					num += (O[t] == j) ? di_gamma[t][i][j] : 0;
+					num += (O[t] == j) ? gamma[t][i] : 0;
 					denom += gamma[t][i];
 				}
 				
@@ -283,7 +284,7 @@ public class Lambda {
 	
 	public void optimize(int[] O) {
 		
-		for(int i = 0; i < 6; i++){
+		for(int i = 0; i < 550; i++){
 			forward(O);
 			backward(O);
 			gammas(O);
