@@ -284,22 +284,24 @@ public class Lambda {
 	
 	public void optimize(int[] O) {
 		
-		for(int i = 0; i < 550; i++){
+		for(int i = 0; i < 20; i++){
 			forward(O);
 			backward(O);
 			gammas(O);
 			fixit(O);
 		}
 		
+		int max = 0;
 		double niveau, currniveau = 0;
 		do {
+			max++;
 			niveau = currniveau;
 			forward(O);
 			backward(O);
 			gammas(O);
 			fixit(O);
 			currniveau = measure();
-		} while ((niveau / currniveau)-1 > 0.0001);
+		} while ((niveau / currniveau)-1 > 0.0001 && max < 50);
 
 	}
 	
