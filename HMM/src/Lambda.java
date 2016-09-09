@@ -74,7 +74,7 @@ public class Lambda {
 		}
 
 		// scale the alpha[0][i]
-		c[0] = 1 / c[0];
+		c[0] = (double) ((double) 1d) / c[0];
 		for (int i = 0; i < N; i++) {
 			alpha[0][i] *= c[0];
 		}
@@ -92,7 +92,7 @@ public class Lambda {
 			}
 
 			// scale the alpha[t][i]
-			c[t] = 1 / c[t];
+			c[t] = (double) ((double) 1) / c[t];
 			for (int i = 0; i < N; i++) {
 				alpha[t][i] *= c[t];
 			}
@@ -284,7 +284,7 @@ public class Lambda {
 	
 	public void optimize(int[] O) {
 		
-		for(int i = 0; i < 20; i++){
+		for(int i = 0; i < 000; i++){
 			forward(O);
 			backward(O);
 			gammas(O);
@@ -292,7 +292,7 @@ public class Lambda {
 		}
 		
 		int max = 0;
-		double niveau, currniveau = 0;
+		double niveau, currniveau = Double.NEGATIVE_INFINITY;
 		do {
 			max++;
 			niveau = currniveau;
@@ -301,7 +301,9 @@ public class Lambda {
 			gammas(O);
 			fixit(O);
 			currniveau = measure();
-		} while ((niveau / currniveau)-1 > 0.0001 && max < 50);
+		} while (niveau < currniveau && max < 300);
+		
+		// while ((niveau / currniveau)-1 > 0.0001 && max < 50);
 
 	}
 	
