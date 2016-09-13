@@ -28,6 +28,14 @@ class Player {
         // This line chooses not to shoot.
     	
     	// TODO Can you please put out the given data about every bird, thanks!
+    	int numBirds = pState.getNumBirds();
+    	for(int i = 0; i < numBirds; i++){
+    		Bird curr = pState.getBird(i);
+    		int numMoves = curr.getSeqLength();
+    		for(int j = 0; j < numMoves; j++){
+    			System.err.println(curr.getObservation(i));
+    		}
+    	}
     	
         return cDontShoot;
 
