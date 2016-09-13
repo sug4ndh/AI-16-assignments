@@ -1,3 +1,5 @@
+import java.sql.Time;
+import java.util.concurrent.TimeUnit;
 
 class Player {
 
@@ -27,21 +29,43 @@ class Player {
 
         // This line chooses not to shoot.
     	
-    	// TODO Can you please put out the given data about every bird, thanks!
-    	int numBirds = pState.getNumBirds();
-    	for(int i = 0; i < numBirds; i++){
-    		Bird curr = pState.getBird(i);
-    		int numMoves = curr.getSeqLength();
-    		for(int j = 0; j < numMoves; j++){
-    			System.err.println(curr.getObservation(i));
-    		}
-    	}
+    	// Use this to see 'every' data we get
+    	// printState(pState);
     	
-        return cDontShoot;
+        return cDontShoot; 
+        
+        
 
         // This line would predict that bird 0 will move right and shoot at it.
         // return Action(0, MOVE_RIGHT);
     }
+    
+    /**
+     * 
+     * Prints all moves of all birds
+     * 
+     * @param pState the GameState to show
+     */
+    private void printState(GameState pState) {
+    	int numBirds = pState.getNumBirds();
+    	for(int i = 0; i < numBirds; i++){
+    		Bird curr = pState.getBird(i);
+    		int numMoves = curr.getSeqLength();
+    		System.err.println("\n \n Bird " + i);
+    		for(int j = 0; j < numMoves; j++){
+    			System.err.print(curr.getObservation(j) + " ");
+    		}
+    	}
+    	
+    	try {
+			TimeUnit.MILLISECONDS.sleep(300);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	System.err.println("\n NÄSTA");
+	}
 
     /**
      * Guess the species!
@@ -60,6 +84,8 @@ class Player {
          * Here you should write your clever algorithms to guess the species of
          * each bird. This skeleton makes no guesses, better safe than sorry!
          */
+    	
+    	System.err.println("KEKSE2");
 
         int[] lGuess = new int[pState.getNumBirds()];
         for (int i = 0; i < pState.getNumBirds(); ++i)
