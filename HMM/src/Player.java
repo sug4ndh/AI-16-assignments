@@ -84,12 +84,10 @@ class Player {
          * Here you should write your clever algorithms to guess the species of
          * each bird. This skeleton makes no guesses, better safe than sorry!
          */
-    	
-    	System.err.println("KEKSE2");
 
         int[] lGuess = new int[pState.getNumBirds()];
         for (int i = 0; i < pState.getNumBirds(); ++i)
-            lGuess[i] = Constants.SPECIES_UNKNOWN;
+            lGuess[i] = Constants.SPECIES_PIGEON;
         return lGuess;
     }
 
@@ -114,6 +112,20 @@ class Player {
      * @param pDue time before which we must have returned
      */
     public void reveal(GameState pState, int[] pSpecies, Deadline pDue) {
+    	
+    	for(int sp : pSpecies) System.err.println(sp);
+    	
+    	System.err.println("\n \n");
+    	
+    	System.err.println(pState.getRound());
+    	
+    	try {
+			TimeUnit.MILLISECONDS.sleep(500);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
     }
 
     public static final Action cDontShoot = new Action(-1, -1);
