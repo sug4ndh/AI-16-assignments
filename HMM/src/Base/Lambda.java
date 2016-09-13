@@ -1,3 +1,4 @@
+package Base;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -98,7 +99,7 @@ public class Lambda {
 		}
 
 		// scale the alpha[0][i]
-		c[0] = (double) ((double) 1d) / c[0];
+		c[0] = 1.0 / c[0];
 		for (int i = 0; i < N; i++) {
 			alpha[0][i] *= c[0];
 		}
@@ -308,7 +309,7 @@ public class Lambda {
 	
 	public void optimize(int[] O) {
 		
-		for(int i = 0; i < 000; i++){
+		for(int i = 0; i < 0; i++){
 			forward(O);
 			backward(O);
 			gammas(O);
@@ -321,11 +322,24 @@ public class Lambda {
 			max++;
 			niveau = currniveau;
 			forward(O);
+//			System.out.println("\n Alpha\n");
+//			System.out.println(new Matrix(alpha).toPrettyString());
 			backward(O);
+//			System.out.println("\n Beta\n");
+//			System.out.println((new Matrix(beta)).toPrettyString());
 			gammas(O);
+//			System.out.println("\n Gamma\n");
+//			System.out.println((new Matrix(gamma)).toPrettyString());
 			fixit(O);
 			currniveau = measure();
-		} while (niveau < currniveau && max < 10000);
+		} while (niveau < currniveau && max < 300);
+		
+//		System.out.println(new Matrix (di_gamma[0]).toPrettyString());
+		
+//		System.out.println("\n A\n");
+//		System.out.println(A.toPrettyString());
+//		System.out.println("\n B\n");
+//		System.out.println(B.toPrettyString());
 		
 		System.err.println(max);
 		System.err.flush();
