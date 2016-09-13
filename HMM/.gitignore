@@ -1,1 +1,23 @@
-*.java
+*target*
+*.jar
+*.war
+*.ear
+*.class
+*.lnk
+
+# eclipse specific git ignore
+.metadata
+/bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
