@@ -1,9 +1,22 @@
+package dhunt;
+
 import java.sql.Time;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-class Player {
 
+//TODO find_bird and reveal func
+
+class Player {
+    
+    int num_of_species = Constants.COUNT_SPECIES;
     public Player() {
+        ArrayList<List<Lambda>> listofbirds = new ArrayList<>();
+        for (int i=0;i<num_of_species;i++){
+            listofbirds.add(new ArrayList());
+    }
+        
     }
 
     /**
@@ -79,17 +92,39 @@ class Player {
      * @param pDue time before which we must have returned
      * @return a vector with guesses for all the birds
      */
+    
+    public int find_bird(Bird b){
+        
+        
+    }
     public int[] guess(GameState pState, Deadline pDue) {
         /*
          * Here you should write your clever algorithms to guess the species of
          * each bird. This skeleton makes no guesses, better safe than sorry!
          */
 
+      //  int[] lGuess = new int[pState.getNumBirds()];
+      //  for (int i = 0; i < pState.getNumBirds(); ++i)
+      //      lGuess[i] = Constants.SPECIES_PIGEON;
+      //  return lGuess;
+        
+        //Random randgen = new Random();
         int[] lGuess = new int[pState.getNumBirds()];
-        for (int i = 0; i < pState.getNumBirds(); ++i)
-            lGuess[i] = Constants.SPECIES_PIGEON;
+        //int guess;
+
+        if (pState.getRound() == 0) {
+            for (int i = 0; i < lGuess.length; i++) {
+                
+                lGuess[i] = Constants.SPECIES_PIGEON;
+            }
+        } else {
+            for (int i = 0; i < pState.getNumBirds(); i++) 
+                lGuess[i] = find_bird(pState.getBird(i));
+        }
+
         return lGuess;
     }
+    //}
 
     /**
      * If you hit the bird you were trying to shoot, you will be notified
