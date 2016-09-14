@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.Scanner;
 
 /***
@@ -9,42 +8,57 @@ import java.util.Scanner;
 
 public class Lambda {
 
-	private Matrix A;
-	private Matrix B;
+	private Matrix state_transion_prob;
+	private Matrix state_emission_prob;
 
-	private Matrix pi;
+	private Matrix initial_state_dist;
 
 	private double[][] alpha;
-	private double[] c;
+	private double[] scaling_factor;
 	private double[][] beta;
 	private double[][][] di_gamma;
 	private double[][] gamma;
 	
-	private int N;
-	private int M;
+	private int numStates;
+	private int numEmissions;
 
 	public Lambda(Matrix A, Matrix B, Matrix pi) {
-		this.A = A;
-		this.B = B;
-		this.pi = pi;
-		this.N = A.m();
-		this.M = B.n();
+		this.state_transion_prob = A;
+		this.state_emission_prob = B;
+		this.initial_state_dist = pi;
+		this.numStates = A.m();
+		this.numEmissions = B.n();
 	}
 	
+	/***
+	 * 
+	 * Initializes matrixes with random, but row stochastic values
+	 * 
+	 * @param N number of states
+	 * @param M number of emissions
+	 */
 	public Lambda(int N, int M) {
-		this.A = new Matrix(N, N, true);
-		this.B = new Matrix(N, M, true);
-		this.pi = new Matrix(1, N, true);
-		this.N = A.m();
-		this.M = B.n();
+		this.state_transion_prob = new Matrix(N, N, true);
+		this.state_emission_prob = new Matrix(N, M, true);
+		this.initial_state_dist = new Matrix(1, N, true);
+		this.numStates = state_transion_prob.m();
+		this.numEmissions = state_emission_prob.n();
 	}
 	
+	/***
+	 * 
+	 * Initializes matrixes with random, but row stochastic values
+	 * 
+	 * @param N number of states
+	 * @param M number of emissions
+	 * @param pi initial state distribution
+	 */
 	public Lambda(int N, int M, Matrix pi) {
-		this.A = new Matrix(N, N, true);
-		this.B = new Matrix(N, M, true);
-		this.pi = pi;
-		this.N = A.m();
-		this.M = B.n();
+		this.state_transion_prob = new Matrix(N, N, true);
+		this.state_emission_prob = new Matrix(N, M, true);
+		this.initial_state_dist = pi;
+		this.numStates = state_transion_prob.m();
+		this.numEmissions = state_emission_prob.n();
 	}
 
 	// public Lambda(Matrix A, Matrix B, Matrix pi, int[] O) {
@@ -52,107 +66,126 @@ public class Lambda {
 	// this.O = O;
 	// }
 
+	/**
+	 * 
+	 * @param sc Scanner with stream where the matrix is encoded in
+	 */
 	public Lambda(Scanner sc) {
-		this.A = new Matrix(sc);
-		this.B = new Matrix(sc);
-		this.pi = new Matrix(sc);
-		this.N = A.m();
-		this.M = B.n();
+		this.state_transion_prob = new Matrix(sc);
+		this.state_emission_prob = new Matrix(sc);
+		this.initial_state_dist = new Matrix(sc);
+		this.numStates = state_transion_prob.m();
+		this.numEmissions = state_emission_prob.n();
 	}
 
 	public String printA() {
-		return A.toString();
+		return state_transion_prob.toString();
 	}
 	
 	public String printB() {
-		return B.toString();
+		return state_emission_prob.toString();
 	}
 
 	public String print_pi() {
-		return pi.toString();
+		return initial_state_dist.toString();
 	}
 	
 	public void prettyPrint() {
-		System.out.println(A.toPrettyString());
+		System.out.println(state_transion_prob.toPrettyString());
 		System.out.println("");
-		System.out.println(B.toPrettyString());
+		System.out.println(state_emission_prob.toPrettyString());
 		System.out.println("");
-		System.out.println(pi.toPrettyString());
+		System.out.println(initial_state_dist.toPrettyString());
 	}
 
-	public void A_step() {
-		pi = Matrix.mult(Matrix.mult(pi, A), B);
+	/***
+	 * 
+	 * @return state distribution after one step
+	 */
+	public Matrix A_step() {
+		return Matrix.mult(Matrix.mult(initial_state_dist, state_transion_prob), state_emission_prob);
 	}
 
+	/**
+	 * 
+	 * @param O observation matrix
+	 * @return logarithmic probability of given observation sequence
+	 */
 	public double forward(int[] O) {
 
 		int T = O.length;
-		alpha = new double[T][N];
+		alpha = new double[T][numStates];
 
-		c = new double[T];
+		scaling_factor = new double[T];
 
 		// compute alpha[0][i]
-		for (int i = 0; i < N; i++) {
-			alpha[0][i] = pi.get(0, i) * B.get(i, O[0]);
-			c[0] += alpha[0][i];
+		for (int i = 0; i < numStates; i++) {
+			alpha[0][i] = initial_state_dist.get(0, i) * state_emission_prob.get(i, O[0]);
+			scaling_factor[0] += alpha[0][i];
 		}
 
 		// scale the alpha[0][i]
-		c[0] = (double) ((double) 1d) / c[0];
-		for (int i = 0; i < N; i++) {
-			alpha[0][i] *= c[0];
+		scaling_factor[0] = (double) ((double) 1d) / scaling_factor[0];
+		for (int i = 0; i < numStates; i++) {
+			alpha[0][i] *= scaling_factor[0];
 		}
 
 		// compute alpha[t][i]
 		for (int t = 1; t < T; t++) {
-			for (int i = 0; i < N; i++) {
+			for (int i = 0; i < numStates; i++) {
 
-				for (int j = 0; j < N; j++) {
-					alpha[t][i] += alpha[t - 1][j] * A.get(j, i);
+				for (int j = 0; j < numStates; j++) {
+					alpha[t][i] += alpha[t - 1][j] * state_transion_prob.get(j, i);
 				}
 
-				alpha[t][i] *= B.get(i, O[t]);
-				c[t] += alpha[t][i];
+				alpha[t][i] *= state_emission_prob.get(i, O[t]);
+				scaling_factor[t] += alpha[t][i];
 			}
 
 			// scale the alpha[t][i]
-			c[t] = (double) ((double) 1) / c[t];
-			for (int i = 0; i < N; i++) {
-				alpha[t][i] *= c[t];
+			scaling_factor[t] = (double) ((double) 1) / scaling_factor[t];
+			for (int i = 0; i < numStates; i++) {
+				alpha[t][i] *= scaling_factor[t];
 			}
 		}
 
-		return 1 / Arrays.stream(c).reduce(1, (a, b) -> a * b);
+		// return 1 / Arrays.stream(c).reduce(1, (a, b) -> a * b);
+		return measure();
 	}
 
+	/***
+	 * 
+	 * @param O observation sequence
+	 * @return probability of given observation sequence
+	 */
 	public int[] delta(int[] O) {
 
 		int T = O.length;
-		double[][] delta = new double[T][N];
-		int[][] deltaArg = new int[T - 1][N];
+		double[][] delta = new double[T][numStates];
+		int[][] deltaArg = new int[T - 1][numStates];
 
 		double[] c = new double[T];
 
 		// compute delta[0][i]
-		for (int i = 0; i < N; i++) {
-			delta[0][i] = pi.get(0, i) * B.get(i, O[0]);
+		for (int i = 0; i < numStates; i++) {
+			delta[0][i] = initial_state_dist.get(0, i) * state_emission_prob.get(i, O[0]);
 			c[0] += delta[0][i];
 		}
 
 		// scale the delta[0][i]
 		c[0] = 1 / c[0];
-		for (int i = 0; i < N; i++) {
+		for (int i = 0; i < numStates; i++) {
 			delta[0][i] *= c[0];
 		}
 
 		// compute delta[t][i]
 		for (int t = 1; t < T; t++) {
-			for (int i = 0; i < N; i++) {
+			for (int i = 0; i < numStates; i++) {
 
 				int maxA = 0;
 				double maxV = 0;
-				for (int j = 0; j < N; j++) {
-					double curr = delta[t - 1][j] * A.get(j, i) * B.get(i, O[t]);
+				for (int j = 0; j < numStates; j++) {
+					double curr = delta[t - 1][j] * state_transion_prob.get(j, i) * state_emission_prob.get(i, O[t]);
 					if (curr > maxV) {
 						maxV = curr;
 						maxA = j;
@@ -165,14 +198,14 @@ public class Lambda {
 
 			// scale the delta[t][i]
 			c[t] = 1 / c[t];
-			for (int i = 0; i < N; i++) {
+			for (int i = 0; i < numStates; i++) {
 				delta[t][i] *= c[t];
 			}
 		}
 
 		int maxA = 0;
 		double maxV = 0;
-		for (int j = 0; j < N; j++) {
+		for (int j = 0; j < numStates; j++) {
 			if (delta[T - 1][j] > maxV) {
 				maxV = delta[T - 1][j];
 				maxA = j;
@@ -192,22 +225,22 @@ public class Lambda {
 	private double[][] backward(int[] O) {
 
 		int T = O.length;
-		beta = new double[T][N];
+		beta = new double[T][numStates];
 
 		// Initialize beta[T-1][i]
-		for (int i = 0; i < N; i++) {
-			beta[T - 1][i] = c[T - 1];
+		for (int i = 0; i < numStates; i++) {
+			beta[T - 1][i] = scaling_factor[T - 1];
 		}
 
 		// compute beta[t][i]
 		for (int t = T - 2; t >= 0; t--) {
-			for (int i = 0; i < N; i++) {
-				for (int j = 0; j < N; j++) {
-					beta[t][i] += beta[t + 1][j]  * B.get(j, O[t+1]) * A.get(i, j);
+			for (int i = 0; i < numStates; i++) {
+				for (int j = 0; j < numStates; j++) {
+					beta[t][i] += beta[t + 1][j]  * state_emission_prob.get(j, O[t+1]) * state_transion_prob.get(i, j);
 				}
 
 				// scale the beta[t][i]
-				beta[t][i] *= c[t];
+				beta[t][i] *= scaling_factor[t];
 			}
 		} 
 		
@@ -217,15 +250,15 @@ public class Lambda {
 	private void gammas(int[] O) {
 
 		int T = O.length;
-		di_gamma = new double[T-1][N][N];
-		gamma = new double[T][N];
+		di_gamma = new double[T-1][numStates][numStates];
+		gamma = new double[T][numStates];
 		
 		for(int t = 0; t < T-1; t++){
 			// Denominator is different from formula because of scaling
 			double denom = 0;
-			for(int i = 0; i < N; i++){
-				for (int j = 0; j < N; j++) {
-					denom += alpha[t][i] * A.get(i, j) * B.get(j, O[t+1]) * beta[t+1][j];
+			for(int i = 0; i < numStates; i++){
+				for (int j = 0; j < numStates; j++) {
+					denom += alpha[t][i] * state_transion_prob.get(i, j) * state_emission_prob.get(j, O[t+1]) * beta[t+1][j];
 				}
 			}
 			
@@ -235,9 +268,9 @@ public class Lambda {
 			
 			// denom = 1/denom;
 
-			for(int i = 0; i < N; i++){
-				for (int j = 0; j < N; j++) {
-					di_gamma[t][i][j] = alpha[t][i] * A.get(i, j) * B.get(j, O[t+1]) *
+			for(int i = 0; i < numStates; i++){
+				for (int j = 0; j < numStates; j++) {
+					di_gamma[t][i][j] = alpha[t][i] * state_transion_prob.get(i, j) * state_emission_prob.get(j, O[t+1]) *
 							beta[t+1][j] / denom; // * denom;
 					gamma[t][i] += di_gamma[t][i][j]; 
 				}
@@ -252,20 +285,20 @@ public class Lambda {
 		
 		// denom = 1/denom;
 		
-		for (int i = 0; i < N; i++) {
+		for (int i = 0; i < numStates; i++) {
 			gamma[T-1][i] = alpha[T-1][i] / denom; // *denom;
 		}
 		
 	}
 	
-	public void fixit(int[] O) {
+	private void fixit(int[] O) {
 	
 		int T = O.length;
 		
-		pi = new Matrix(gamma[0]); // safe link
+		initial_state_dist = new Matrix(gamma[0]); // safe link
 	
-		for(int i = 0; i < N; i++){
-			for(int j = 0; j < N; j++){
+		for(int i = 0; i < numStates; i++){
+			for(int j = 0; j < numStates; j++){
 				double num = 0, denom = 0;
 				
 				for(int t = 0; t < T - 1; t++){
@@ -273,14 +306,14 @@ public class Lambda {
 					denom += gamma[t][i];
 				}
 				
-				A.set(i, j, num/denom);
+				state_transion_prob.set(i, j, num/denom);
 				
 			}
 		}
 		
 
-		for(int i = 0; i < N; i++){
-			for(int j = 0; j < M; j++){
+		for(int i = 0; i < numStates; i++){
+			for(int j = 0; j < numEmissions; j++){
 				double num = 0, denom = 0;
 				
 				for(int t = 0; t < T - 1; t++){
@@ -288,25 +321,38 @@ public class Lambda {
 					denom += gamma[t][i];
 				}
 				
-				B.set(i, j, num/denom);
+				state_emission_prob.set(i, j, num/denom);
 				
 			}
 		}
 	}
 	
-	public double measure() {
+	/***
+	 * 
+	 * Call forward() first!
+	 * 
+	 * @return logarithmic (due to underflow) probability of seen observation sequence
+	 */
+	private double measure() {
 		
 		double magic = 0;
-		int T = c.length;
+		int T = scaling_factor.length;
 		
 		for(int i = 0; i < T; i++){
-			magic += Math.log(c[i]);
+			magic += Math.log(scaling_factor[i]);
 		}
 		
 		return -magic;
 	}
 	
-	public void optimize(int[] O) {
+	/***
+	 * 
+	 * Optimizes the HMM for the given observation sequence
+	 * This operation manipulates this object!
+	 * 
+	 * @param O observation sequence
+	 */
+	public void optimizeFor(int[] O) {
 		
 		for(int i = 0; i < 000; i++){
 			forward(O);
@@ -325,12 +371,11 @@ public class Lambda {
 			gammas(O);
 			fixit(O);
 			currniveau = measure();
-		} while (niveau < currniveau && max < 10000);
+		} while (niveau < currniveau && max < 300);
 		
-		System.err.println(max);
-		System.err.flush();
+//		System.err.println(max);
+//		System.err.flush();
 		
-		// while ((niveau / currniveau)-1 > 0.0001 && max < 50);
 
 	}
 	
