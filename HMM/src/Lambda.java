@@ -1,8 +1,4 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 
 /***
  * 
@@ -141,8 +137,7 @@ public class Lambda {
 			}
 		}
 		// System.err.println(" ");
-		// Pair of best suited HMM for O and corresponding logarithmic probability
-		// new Pair<>(bestA, bestV);
+
 		return bestA;
 	}
 	
@@ -166,7 +161,7 @@ public class Lambda {
 				newscaling += newalpha * state_emission_prob.get(i, o);
 			}
 			
-			newscaling = 1.0 / newscaling;
+			newscaling = divide(1.0, newscaling);
 			
 			// System.err.println(newscaling);
 			
@@ -219,7 +214,7 @@ public class Lambda {
 		}
 
 		// scale the alpha[0][i]
-		scaling_factor[0] = 1.0 / scaling_factor[0];
+		scaling_factor[0] = divide(1.0, scaling_factor[0]);
 		for (int i = 0; i < numStates; i++) {
 			alpha[0][i] *= scaling_factor[0];
 		}
@@ -237,7 +232,7 @@ public class Lambda {
 			}
 
 			// scale the alpha[t][i]
-			scaling_factor[t] = 1.0 / scaling_factor[t];
+			scaling_factor[t] = divide(1.0, scaling_factor[t]);
 			if(scaling_factor[t] == Double.NaN) System.err.println("ALARM11");
 			for (int i = 0; i < numStates; i++) {
 				alpha[t][i] *= scaling_factor[t];
@@ -246,8 +241,21 @@ public class Lambda {
 
 		// return 1 / Arrays.stream(c).reduce(1, (a, b) -> a * b);
 		double logProb = measure();
-		if(logProb == Double.NaN) System.err.println("ALARM!!");
+		if (!Double.isFinite(logProb)) {
+			logProb = Double.NEGATIVE_INFINITY;
+//			System.err.println("ALARM");
+//			for (double d : scaling_factor)
+//				System.err.print(d + " ");
+//			System.err.println();
+//			prettyPrint();
+//			try {
+//				TimeUnit.MILLISECONDS.sleep(2000);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+		}
 		return logProb;
+		// return 1.0 / Arrays.stream(scaling_factor).reduce(1, (a, b) -> a * b);
 	}
 
 	/***
@@ -270,7 +278,7 @@ public class Lambda {
 		}
 
 		// scale the delta[0][i]
-		c[0] = 1 / c[0];
+		c[0] = divide(1.0, c[0]);
 		for (int i = 0; i < numStates; i++) {
 			delta[0][i] *= c[0];
 		}
@@ -294,7 +302,7 @@ public class Lambda {
 			}
 
 			// scale the delta[t][i]
-			c[t] = 1 / c[t];
+			c[t] = divide(1.0, c[t]);
 			for (int i = 0; i < numStates; i++) {
 				delta[t][i] *= c[t];
 			}
@@ -368,7 +376,7 @@ public class Lambda {
 			for(int i = 0; i < numStates; i++){
 				for (int j = 0; j < numStates; j++) {
 					di_gamma[t][i][j] = alpha[t][i] * state_transion_prob.get(i, j) * state_emission_prob.get(j, O.get(t+1)) *
-							beta[t+1][j] / denom; // * denom;
+						divide(beta[t+1][j], denom); // * denom;
 					gamma[t][i] += di_gamma[t][i][j]; 
 				}
 			} 
@@ -383,7 +391,7 @@ public class Lambda {
 		// denom = 1/denom;
 		
 		for (int i = 0; i < numStates; i++) {
-			gamma[T-1][i] = alpha[T-1][i] / denom; // *denom;
+			gamma[T-1][i] = divide(alpha[T-1][i], denom); // *denom;
 		}
 		
 	}
@@ -500,12 +508,17 @@ public class Lambda {
 	 * @param O observation sequence
 	 */
 	public void train(ArrayList<Integer> O) {
-		state_transion_prob.smooth(0.1);
-		state_emission_prob.smooth(0.1);
-		initial_state_dist.smooth(0.1);
-		
+
+		this.smooth(0.1);
 		this.optimizeFor(O);
+		this.smooth(0.05);
 		
+	}
+	
+	public void smooth(double degree) {
+		state_transion_prob.smooth(degree);
+		state_emission_prob.smooth(degree);
+		initial_state_dist.smooth(degree);
 	}
 	
 	/***
@@ -541,11 +554,21 @@ public class Lambda {
 		Scanner sc = new Scanner(System.in);
 		sc.useLocale(Locale.US);
 		
-		Lambda lambda = new Lambda(new Matrix(A), new Matrix(B), new Matrix(pi));
+		// Lambda lambda = new Lambda(new Matrix(A), new Matrix(B), new Matrix(pi));
+		Lambda lambda = new Lambda(sc);
 		
-		ArrayList<Integer> O = new ArrayList<>(Arrays.asList(obs));
+		// ArrayList<Integer> O = new ArrayList<>(Arrays.asList(obs));
+		ArrayList<Integer> O = new ArrayList<>();
+		int size = sc.nextInt();
+		for(int i = 0; i < size; i++){
+			O.add(sc.nextInt());
+		}
 		
-		lambda.train(O);
+		System.err.println(lambda.forward(O));
+		
+		lambda.prettyPrint();
+		
+		sc.close();
 
 		
 		// System.out.println(lambda.printA());
@@ -553,5 +576,8 @@ public class Lambda {
 
 	}
 	
+	public static final double divide(double a, double b) {
+		return b == 0 ? 0 : a/b;
+	}
 	
 }

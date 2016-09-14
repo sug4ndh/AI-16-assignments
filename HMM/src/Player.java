@@ -57,26 +57,50 @@ class Player {
     	// Never shoot in the first round, we don't no anything.
 		
     	if(pState.getRound() == 0) return cDontShoot;
-    	int numBirds = pState.getNumBirds();
     	
-    	if(pState.getBird(pState.getNumBirds() -1).getSeqLength() < 50) return cDontShoot;
-    	
-    	for(int i = 0; i < numBirds; i++){
-    		Bird bird = pState.getBird(i);
-    		if(bird.isAlive()){
-    			Lambda hmm = new Lambda(6, Constants.COUNT_MOVE);
-    			ArrayList<Integer> mov = copyObservations(bird);
-    			hmm.optimizeFor(mov);
-
-    			return new Action(i, hmm.nextEmission(mov)); // hmm.nextEmission(mov.size())
-    		}
-    	}
+//    	int numBirds = pState.getNumBirds();
+//    	
+//    	if(pState.getBird(pState.getNumBirds() -1).getSeqLength() < 50) return cDontShoot;
+//    	
+//    	for(int i = 0; i < numBirds; i++){
+//    		Bird bird = pState.getBird(i);
+//    		if(bird.isAlive()){
+//    			Lambda hmm = new Lambda(6, Constants.COUNT_MOVE);
+//    			ArrayList<Integer> mov = copyObservations(bird);
+//    			hmm.optimizeFor(mov);
+//
+//    			return new Action(i, hmm.nextEmission(mov)); // hmm.nextEmission(mov.size())
+//    		}
+//    	}
     	
 
 		return cDontShoot;
 
 		// This line would predict that bird 0 will move right and shoot at it.
 		// return Action(0, MOVE_RIGHT);
+	}
+	
+	public int majorityGuess(Bird bird) {
+	
+		ArrayList<Integer> moves = copyObservations(bird);
+		
+		double currV = 0; // Double.NEGATIVE_INFINITY;
+		int currA = 0;
+		for(int i = 0; i < Constants.COUNT_SPECIES; i++){
+			double var = hmms.get(i).stream().
+					mapToDouble(l -> l.forward(moves)).
+					average().
+					orElse(Double.NEGATIVE_INFINITY);
+			// System.err.print(var + " ");
+			if(var < currV){
+				currA = i;
+				currV = var;
+			}
+		}
+		
+		// System.err.println("final " + currV + " " + currA);
+		
+		return currA;
 	}
 
 	/**
@@ -257,7 +281,7 @@ class Player {
 	    		moves.get(pSpecies[i]).add(bird_moves);
 
 	    		Lambda birdhmm = new Lambda(ASPECTED_NUM_STATES, Constants.COUNT_MOVE);
-	    		birdhmm.optimizeFor(bird_moves);
+	    		birdhmm.train(bird_moves);
 	    		hmms.get(pSpecies[i]).add(birdhmm);
 	    		
 
