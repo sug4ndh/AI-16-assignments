@@ -258,7 +258,7 @@ public class Lambda {
 		
 	}
 	
-	private void fixit(int[] O) {
+	public void fixit(int[] O) {
 	
 		int T = O.length;
 		

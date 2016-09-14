@@ -5,14 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
-//TODO find_bird and reveal func
-
 class Player {
     
     int num_of_species = Constants.COUNT_SPECIES;
+    int num_of_moves = Constants.COUNT_MOVE;
+    public ArrayList<List<Lambda>> listofbirds = new ArrayList<>();
     public Player() {
-        ArrayList<List<Lambda>> listofbirds = new ArrayList<>();
+        
         for (int i=0;i<num_of_species;i++){
             listofbirds.add(new ArrayList());
     }
@@ -93,10 +92,19 @@ class Player {
      * @return a vector with guesses for all the birds
      */
     
-    public int find_bird(Bird b){
-        
-        
+
+    
+    public int[] Observe(Bird a) {
+        int observations[] = new int[a.getSeqLength()];
+        for (int i = 0; i < a.getSeqLength(); i++) {
+            if(a.wasDead(i)){
+                continue;
+            }
+            observations[i] = a.getObservation(i);
+        }
+        return observations;
     }
+    
     public int[] guess(GameState pState, Deadline pDue) {
         /*
          * Here you should write your clever algorithms to guess the species of
@@ -114,7 +122,7 @@ class Player {
 
         if (pState.getRound() == 0) {
             for (int i = 0; i < lGuess.length; i++) {
-                
+                //guess = randgen.nextInt(6);
                 lGuess[i] = Constants.SPECIES_PIGEON;
             }
         } else {
@@ -148,7 +156,7 @@ class Player {
      */
     public void reveal(GameState pState, int[] pSpecies, Deadline pDue) {
     	
-    	for(int sp : pSpecies) System.err.println(sp);
+    	/*for(int sp : pSpecies) System.err.println(sp);
     	
     	System.err.println("\n \n");
     	
@@ -160,8 +168,23 @@ class Player {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	*/
     	
+    	//re-estimate the model after finding the species
+        for (int i = 0; i < pSpecies.length; i++) {
+
+            if(pSpecies[i]!=Constants.SPECIES_UNKNOWN){
+
+                listofbirds.get(pSpecies[i]).add(new Lambda(num_of_species, num_of_moves));
+
+                listofbirds.get(pSpecies[i]).get(listofbirds.get(pSpecies[i]).size()-1).fixit(Observe(pState.getBird(i)));
+
+            }
+
+        }
+
     }
 
     public static final Action cDontShoot = new Action(-1, -1);
 }
+
