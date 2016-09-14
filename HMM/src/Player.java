@@ -8,15 +8,28 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 class Player {
+	
+	final static int ASPECTED_NUM_BIRDS = 20;
+	// final static int ASPECTED_NUM_MOVES = 20;
+	final static int ASPECTED_NUM_STATES = 3;
 
-	public ArrayList<List<Lambda>> listofbirds = new ArrayList<>();
+	// Do we need all hmms? I don't think so... Just pick the last
+	// ArrayList<List<Lambda>> listofbirds;
+	Lambda[] hmms;
+	List<List<List<Integer>>> moves;
 
 	public Player() {
+		
+        hmms = new Lambda[Constants.COUNT_SPECIES];
+        moves = new ArrayList<>(Constants.COUNT_SPECIES);
 
 		for (int i = 0; i < Constants.COUNT_SPECIES; i++) {
-			listofbirds.add(new ArrayList());
+			
+			// listofbirds.add(new ArrayList());
+            hmms[i] = new Lambda(ASPECTED_NUM_STATES, Constants.COUNT_MOVE);
+            moves.add(new ArrayList<>(ASPECTED_NUM_BIRDS));
+            
 		}
-
 	}
 
 	/**
@@ -45,8 +58,8 @@ class Player {
 
 		// This line chooses not to shoot.
 
-		// Use this to see 'every' data we get
-		// printState(pState);
+    	// Never shoot in the first round, we don't no anything.
+    	if(pState.getRound() == 0) return cDontShoot;
 
 		return cDontShoot;
 
@@ -115,19 +128,25 @@ class Player {
 			}
 		} else {
 			for (int i = 0; i < pState.getNumBirds(); i++)
-				lGuess[i] = find_bird(pState.getBird(i));
+				lGuess[i] = guess_species(pState.getBird(i));
 		}
 
 		return lGuess;
 	}
 
-	public int[] Observe(Bird bird) {
+	private int guess_species(Bird bird) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	private int[] observe(Bird bird) {
 		int num_of_state = bird.getSeqLength();
 		int observations[] = new int[num_of_state];
 		for (int state = 0; state < num_of_state; state++) {
 			if (bird.wasDead(state)) {
 				continue;
 			}
+			// that's strange --> ??
 			observations[state] = bird.getObservation(state);
 		}
 		return observations;
@@ -163,6 +182,14 @@ class Player {
 			e.printStackTrace();
 		}
 	}
+	
+	private ArrayList<Integer> copyObservations(Bird bird) {
+    	ArrayList<Integer> arr = new ArrayList<>(bird.getSeqLength());
+		for(int i = 0; i < bird.getSeqLength(); i++){
+			arr.set(i, bird.getObservation(i));
+		}
+		return arr;
+	}
 
 	/**
 	 * If you made any guesses, you will find out the true species of those
@@ -182,9 +209,14 @@ class Player {
 
 			if (pSpecies[i] != Constants.SPECIES_UNKNOWN) {
 
-				listofbirds.get(pSpecies[i]).add(new Lambda(Constants.COUNT_SPECIES, Constants.COUNT_MOVE));
-				listofbirds.get(pSpecies[i]).get(listofbirds.get(pSpecies[i]).size() - 1)
-						.optimizeFor(Observe(pState.getBird(i)));
+//				listofbirds.get(pSpecies[i]).add(new Lambda(Constants.COUNT_SPECIES, Constants.COUNT_MOVE));
+//				listofbirds.get(pSpecies[i]).get(listofbirds.get(pSpecies[i]).size() - 1)
+//						.optimizeFor(Observe(pState.getBird(i)));
+				
+	    		Bird bird = pState.getBird(i);
+	    		ArrayList<Integer> bird_moves = copyObservations(bird);
+	    		moves.get(pSpecies[i]).add(bird_moves);
+	    		hmms[pSpecies[i]].optimizeFor(bird_moves);
 
 			}
 
