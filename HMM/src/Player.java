@@ -6,29 +6,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javafx.util.Pair;
-
 class Player {
 	
 	final static int ASPECTED_NUM_BIRDS = 20;
-	// final static int ASPECTED_NUM_MOVES = 20;
-	final static int ASPECTED_NUM_STATES = 5;
+	final static int ASPECTED_NUM_MOVES = 20;
+	final static int ASPECTED_NUM_STATES = 2;
 
-	// Do we need all hmms? I don't think so... Just pick the last
-	// ArrayList<List<Lambda>> listofbirds;
-	Lambda[] hmms;
+	List<List<Lambda>> hmms;
 	List<List<List<Integer>>> moves;
 
 	public Player() {
 		
-        hmms = new Lambda[Constants.COUNT_SPECIES];
+        hmms = new ArrayList<>(Constants.COUNT_SPECIES);
         moves = new ArrayList<>(Constants.COUNT_SPECIES);
 
 		for (int i = 0; i < Constants.COUNT_SPECIES; i++) {
 			
-			// listofbirds.add(new ArrayList());
-            hmms[i] = new Lambda(ASPECTED_NUM_STATES, Constants.COUNT_MOVE);
-            moves.add(new ArrayList<>(ASPECTED_NUM_BIRDS));
+            hmms.add(new ArrayList<>(ASPECTED_NUM_BIRDS));
+            moves.add(new ArrayList<>(ASPECTED_NUM_MOVES));
             
 		}
 	}
@@ -60,7 +55,23 @@ class Player {
 		// This line chooses not to shoot.
 
     	// Never shoot in the first round, we don't no anything.
+		
     	if(pState.getRound() == 0) return cDontShoot;
+    	int numBirds = pState.getNumBirds();
+    	
+    	if(pState.getBird(pState.getNumBirds() -1).getSeqLength() < 50) return cDontShoot;
+    	
+    	for(int i = 0; i < numBirds; i++){
+    		Bird bird = pState.getBird(i);
+    		if(bird.isAlive()){
+    			Lambda hmm = new Lambda(6, Constants.COUNT_MOVE);
+    			ArrayList<Integer> mov = copyObservations(bird);
+    			hmm.optimizeFor(mov);
+
+    			return new Action(i, hmm.nextEmission(mov)); // hmm.nextEmission(mov.size())
+    		}
+    	}
+    	
 
 		return cDontShoot;
 
@@ -135,9 +146,18 @@ class Player {
 	}
 
 	private int guess_species(Bird bird) {
+		
 		ArrayList<Integer> moves = copyObservations(bird);
-		Pair<Integer, Double> pair = Lambda.best(hmms, moves);
-		return pair.getKey();
+		ArrayList<Lambda> lasts = new ArrayList<>(Constants.COUNT_SPECIES);
+		for(List<Lambda> specie : hmms){
+			if(specie.isEmpty()) {
+				lasts.add(null);
+			} else {
+				lasts.add(specie.get(specie.size() - 1));
+			}
+		}
+		
+		return Lambda.bestOf(lasts, moves); 
 	}
 
 	/*
@@ -225,22 +245,21 @@ class Player {
 	public void reveal(GameState pState, int[] pSpecies, Deadline pDue) {
 		
 		printSpecies(pState, pSpecies);
-		
-		System.err.println(Double.POSITIVE_INFINITY);
 
 		// re-estimate the model after finding the species
 		for (int i = 0; i < pSpecies.length; i++) {
 
 			if (pSpecies[i] != Constants.SPECIES_UNKNOWN) {
-
-//				listofbirds.get(pSpecies[i]).add(new Lambda(Constants.COUNT_SPECIES, Constants.COUNT_MOVE));
-//				listofbirds.get(pSpecies[i]).get(listofbirds.get(pSpecies[i]).size() - 1)
-//						.train(Observe(pState.getBird(i)));
 				
 	    		Bird bird = pState.getBird(i);
+	    		
 	    		ArrayList<Integer> bird_moves = copyObservations(bird);
 	    		moves.get(pSpecies[i]).add(bird_moves);
-	    		hmms[pSpecies[i]].train(bird_moves);
+
+	    		Lambda birdhmm = new Lambda(ASPECTED_NUM_STATES, Constants.COUNT_MOVE);
+	    		birdhmm.optimizeFor(bird_moves);
+	    		hmms.get(pSpecies[i]).add(birdhmm);
+	    		
 
 			}
 

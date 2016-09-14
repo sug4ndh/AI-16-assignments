@@ -1,8 +1,8 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
-import javafx.util.Pair;
 
 /***
  * 
@@ -117,26 +117,86 @@ public class Lambda {
 	 * 
 	 * @param lambdas HMMs to test
 	 * @param O observation sequence
-	 * @return Pair of best suited HMM for O and corresponding logarithmic probability
+	 * @return index of best hmm
 	 */
-	public static Pair<Integer, Double> best(Lambda[] lambdas, ArrayList<Integer> O) {
+	public static int bestOf(List<Lambda> hmms, ArrayList<Integer> O) {
 		
 		double bestV = Double.NEGATIVE_INFINITY;
-		Integer bestA = 0;
+		int bestA = 0, n = hmms.size();
 		
-		for(int i = 0; i < lambdas.length; i++){
-			Lambda lambda = lambdas[i];
+		for(int i = 0; i < n; i++){
+			Lambda lambda = hmms.get(i);
+			if (lambda == null) {
+				continue;
+			}
+//			System.err.println(i);
+//			lambda.prettyPrint();
 			double prob = lambda.forward(O);
 			
 			// System.err.print(" " + prob + " " + Math.exp(prob));
-			if(prob == Double.NaN) System.err.println("ALARM __ !!");
+			// if(prob == Double.NaN) System.err.println("ALARM __ !!");
 			
 			if(bestV < prob) { 
 				bestA = i;
 			}
 		}
 		// System.err.println(" ");
-		return new Pair<>(bestA, bestV);
+		// Pair of best suited HMM for O and corresponding logarithmic probability
+		// new Pair<>(bestA, bestV);
+		return bestA;
+	}
+	
+	public int nextEmission(int lastIndex) {
+		
+		int T = lastIndex, emission = 0;
+		double scaling = Double.MAX_VALUE;
+		
+		for(int o = 0; o < numEmissions; o++){
+
+			double newscaling = 0;
+
+			for (int i = 0; i < numStates; i++) {
+				int newalpha = 0;
+				for (int j = 0; j < numStates; j++) {
+					
+					newalpha += alpha[T - 1][j] * state_transion_prob.get(j, i);
+//					System.err.println("alpha T " + j + "  = " + alpha[T - 1][j]);
+				}
+
+				newscaling += newalpha * state_emission_prob.get(i, o);
+			}
+			
+			newscaling = 1.0 / newscaling;
+			
+			// System.err.println(newscaling);
+			
+			if(newscaling < scaling) {
+				scaling = newscaling;
+				emission = o;
+			}
+
+		}
+		
+		if(!Double.isFinite(scaling)) return -1;
+		
+		return emission;
+	}
+	
+	public int nextEmission(ArrayList<Integer> O) {
+		
+		int n = O.size(), curr = 0;
+		O.add(0); 
+		double old = Double.NEGATIVE_INFINITY;
+		for(int o = 0; o < numEmissions; o++){
+			O.set(n, o);
+			double now = forward(O);
+			if(now > old){
+				old = now;
+				curr = o;
+			}
+		}
+		
+		return curr;
 	}
 
 	/**
@@ -400,15 +460,15 @@ public class Lambda {
 	 */
 	public void optimizeFor(ArrayList<Integer> O) {
 		
-		System.err.println("\n Input Seq");
-		
-		for(Integer obs : O){
-			System.err.print(obs + " ");
-		}
-		System.err.println();
-		
-		System.err.println("Before");
-		prettyPrint();
+//		System.err.println("\n Input Seq");
+//		
+//		for(Integer obs : O){
+//			System.err.print(obs + " ");
+//		}
+//		System.err.println();
+//		
+//		System.err.println("Before");
+//		prettyPrint();
 		
 		int max = 0;
 		double niveau, currniveau = Double.NEGATIVE_INFINITY;
@@ -420,10 +480,10 @@ public class Lambda {
 			gammas(O);
 			fixit(O);
 			currniveau = measure();
-		} while (niveau < currniveau && max < 300);
+		} while (niveau < currniveau && max < 500);
 		
-		System.err.println("After");
-		prettyPrint();
+//		System.err.println("After");
+//		prettyPrint();
 		
 //		System.err.println(max);
 //		System.err.flush();
