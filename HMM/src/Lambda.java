@@ -1,8 +1,7 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Scanner;
-
-import com.sun.scenario.effect.impl.prism.ps.PPSSepiaTonePeer;
-
 import javafx.util.Pair;
 
 /***
@@ -333,6 +332,11 @@ public class Lambda {
 	
 		int T = O.size();
 		
+		double error = measure();
+		
+		// If something goes wrong, stop!
+		if(! Double.isFinite(error) ) return;
+		
 		initial_state_dist = new Matrix(gamma[0]); // safe link
 	
 		for(int i = 0; i < numStates; i++){
@@ -436,12 +440,57 @@ public class Lambda {
 	 * @param O observation sequence
 	 */
 	public void train(ArrayList<Integer> O) {
-		state_emission_prob.smooth(0.1);
+		state_transion_prob.smooth(0.1);
 		state_emission_prob.smooth(0.1);
 		initial_state_dist.smooth(0.1);
 		
 		this.optimizeFor(O);
 		
+	}
+	
+	/***
+	 * 
+	 * For testing only
+	 * 
+	 */
+	
+	private final static double[][] A =
+			{{.000, .000, .670, .330, .000},
+	{.000, .930, .000, .000, .070},
+	{.000, .486, .514, .000, .000},
+	{1.000, .000, .000, .000, .000},
+	{.178, .000, .000, .000, .822}};
+
+	private final static double[][] B =
+	{{.173, .127, .080, .080, .080, .218, .080, .080, .080},
+	{.221, .124, .080, .144, .090, .085, .085, .090, .080},
+	{.308, .080, .080, .130, .080, .080, .080, .080, .080},
+	{.080, .080, .080, .080, .080, .357, .080, .080, .080},
+	{.099, .080, .326, .080, .080, .093, .080, .080, .080}};
+
+	private final static double[][] pi =
+	{{.067, .067, .733, .067, .067}};
+	
+	private final static Integer[] obs = {0, 3, 1, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 2, 5, 2,
+	 2, 2, 5, 2, 2, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 1, 7, 7, 7, 7, 7, 7, 2,
+	 2, 2, 3, 3, 0, 0, 0, 0, 0, 4, 0, 0, 3, 1, 3, 0, 3, 4, 3, 0, 1, 3, 0, 0, 0,
+	 0, 3, 5, 5, 3, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 3, 0, 1, 0, 3, 4, 0, 3,
+	 0, 7, 6};
+	
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		sc.useLocale(Locale.US);
+		
+		Lambda lambda = new Lambda(new Matrix(A), new Matrix(B), new Matrix(pi));
+		
+		ArrayList<Integer> O = new ArrayList<>(Arrays.asList(obs));
+		
+		lambda.train(O);
+
+		
+		// System.out.println(lambda.printA());
+		// System.out.println(lambda.printB());
+
 	}
 	
 	

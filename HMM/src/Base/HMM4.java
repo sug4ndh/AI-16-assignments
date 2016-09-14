@@ -9,7 +9,6 @@ public class HMM4 {
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
 		sc.useLocale(Locale.US);
-		DecimalFormat df = new DecimalFormat("###.0#####", new DecimalFormatSymbols(Locale.US));
 		
 		LambdaOld lambda = new LambdaOld(sc);
 		
