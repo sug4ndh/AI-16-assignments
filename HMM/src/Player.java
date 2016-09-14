@@ -1,17 +1,18 @@
 
 // package dhunt;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javafx.util.Pair;
+
 class Player {
 	
 	final static int ASPECTED_NUM_BIRDS = 20;
 	// final static int ASPECTED_NUM_MOVES = 20;
-	final static int ASPECTED_NUM_STATES = 3;
+	final static int ASPECTED_NUM_STATES = 5;
 
 	// Do we need all hmms? I don't think so... Just pick the last
 	// ArrayList<List<Lambda>> listofbirds;
@@ -75,7 +76,7 @@ class Player {
 	 *            the GameState to show
 	 */
 	@SuppressWarnings("unused")
-	private void printState(GameState pState) {
+	private static void printState(GameState pState) {
 		int numBirds = pState.getNumBirds();
 		for (int i = 0; i < numBirds; i++) {
 			Bird curr = pState.getBird(i);
@@ -89,7 +90,6 @@ class Player {
 		try {
 			TimeUnit.MILLISECONDS.sleep(300);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -118,30 +118,35 @@ class Player {
 		 */
 
 		int[] lGuess = new int[pState.getNumBirds()];
-		// int guess;
 
 		if (pState.getRound() == 0) {
-			for (int i = 0; i < lGuess.length; i++) {
-				// Constants.SPECIES_PIGEON = 0, so, that's kind of stupid
-				// but who knows, maybe they change it
-				Arrays.fill(lGuess, Constants.SPECIES_PIGEON);
-			}
+			// Constants.SPECIES_PIGEON = 0, so, that's kind of stupid
+			// but who knows, maybe they change it
+			Arrays.fill(lGuess, Constants.SPECIES_PIGEON);
 		} else {
 			for (int i = 0; i < pState.getNumBirds(); i++)
 				lGuess[i] = guess_species(pState.getBird(i));
 		}
+		
+		System.err.println("\n Guessing \n");
+		printSpecies(lGuess);
 
 		return lGuess;
 	}
 
 	private int guess_species(Bird bird) {
-		// TODO Auto-generated method stub
-		return 0;
+		ArrayList<Integer> moves = copyObservations(bird);
+		Pair<Integer, Double> pair = Lambda.best(hmms, moves);
+		return pair.getKey();
 	}
 
+	/*
+	 *  Maybe you wanted copyObseravations(Bird) ?
+	 */
 	private int[] observe(Bird bird) {
 		int num_of_state = bird.getSeqLength();
 		int observations[] = new int[num_of_state];
+		// Why #states and not bird.getSeqLength()? Hä?
 		for (int state = 0; state < num_of_state; state++) {
 			if (bird.wasDead(state)) {
 				continue;
@@ -168,13 +173,19 @@ class Player {
 	}
 
 	@SuppressWarnings("unused")
-	private void printSpecies(GameState pState, int[] pSpecies) {
+	private static void printSpecies(GameState pState, int[] pSpecies) {
+
+		System.err.println(pState.getRound());
+		
+		printSpecies(pSpecies);
+	}
+
+	private static void printSpecies(int[] pSpecies) {
+		
 		for (int sp : pSpecies)
 			System.err.print(sp + " ");
 
 		System.err.println("\n \n");
-
-		System.err.println(pState.getRound());
 
 		try {
 			TimeUnit.MILLISECONDS.sleep(500);
@@ -183,10 +194,19 @@ class Player {
 		}
 	}
 	
-	private ArrayList<Integer> copyObservations(Bird bird) {
-    	ArrayList<Integer> arr = new ArrayList<>(bird.getSeqLength());
-		for(int i = 0; i < bird.getSeqLength(); i++){
-			arr.set(i, bird.getObservation(i));
+	/**
+	 * 
+	 * @param bird
+	 * @return all moves of this bird
+	 */
+	private static ArrayList<Integer> copyObservations(Bird bird) {
+		ArrayList<Integer> arr = new ArrayList<>(bird.getSeqLength());
+		for (int i = 0; i < bird.getSeqLength(); i++) {
+			int move = bird.getObservation(i);
+			if (move == Constants.MOVE_DEAD)
+				break;
+			else
+				arr.add(move);
 		}
 		return arr;
 	}
@@ -203,6 +223,10 @@ class Player {
 	 *            time before which we must have returned
 	 */
 	public void reveal(GameState pState, int[] pSpecies, Deadline pDue) {
+		
+		printSpecies(pState, pSpecies);
+		
+		System.err.println(Double.POSITIVE_INFINITY);
 
 		// re-estimate the model after finding the species
 		for (int i = 0; i < pSpecies.length; i++) {
@@ -211,12 +235,12 @@ class Player {
 
 //				listofbirds.get(pSpecies[i]).add(new Lambda(Constants.COUNT_SPECIES, Constants.COUNT_MOVE));
 //				listofbirds.get(pSpecies[i]).get(listofbirds.get(pSpecies[i]).size() - 1)
-//						.optimizeFor(Observe(pState.getBird(i)));
+//						.train(Observe(pState.getBird(i)));
 				
 	    		Bird bird = pState.getBird(i);
 	    		ArrayList<Integer> bird_moves = copyObservations(bird);
 	    		moves.get(pSpecies[i]).add(bird_moves);
-	    		hmms[pSpecies[i]].optimizeFor(bird_moves);
+	    		hmms[pSpecies[i]].train(bird_moves);
 
 			}
 

@@ -99,6 +99,35 @@ public class Matrix {
 		}
 	}
 	
+	/**
+	 * smooth a row stochastic matrix
+	 */
+	public void smooth(double amount) { 
+
+		for (int i = 0; i < m; i++) {
+			for (int j = 0; j < n; j++) {
+				arr[i][j] += amount;
+			}
+		}
+
+
+
+		for (int i = 0; i < m; i++) {
+
+			DoubleStream row = Arrays.stream(arr[i]);
+			double acc = row.sum();
+			row.close();
+
+			for (int j = 0; j < n; j++) {
+				arr[i][j] /= acc;
+			}
+
+		}
+
+
+	}
+
+	
 	/***
 	 * 
 	 * @param arr matrix like (n x m) array, property is unchecked!

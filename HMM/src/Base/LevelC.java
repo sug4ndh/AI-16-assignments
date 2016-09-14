@@ -29,7 +29,7 @@ public class LevelC {
 		Scanner sc = new Scanner(System.in);
 		sc.useLocale(Locale.US);;
 		
-		Lambda lambda = new Lambda(new Matrix(Aa), new Matrix(B), new Matrix(pia));
+		LambdaOld lambda = new LambdaOld(new Matrix(Aa), new Matrix(B), new Matrix(pia));
 		
 		int[] O = new int[sc.nextInt()];
 		for (int i = 0; i < O.length; i++) {

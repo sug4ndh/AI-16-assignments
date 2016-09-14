@@ -1,10 +1,9 @@
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.Scanner;
 
+import com.sun.scenario.effect.impl.prism.ps.PPSSepiaTonePeer;
+
 import javafx.util.Pair;
-import sun.net.www.content.audio.x_aiff;
 
 /***
  * 
@@ -99,11 +98,12 @@ public class Lambda {
 	}
 	
 	public void prettyPrint() {
-		System.out.println(state_transion_prob.toPrettyString());
-		System.out.println("");
-		System.out.println(state_emission_prob.toPrettyString());
-		System.out.println("");
-		System.out.println(initial_state_dist.toPrettyString());
+		System.err.println(state_transion_prob.toPrettyString());
+		System.err.println("");
+		System.err.println(state_emission_prob.toPrettyString());
+		System.err.println("");
+		System.err.println(initial_state_dist.toPrettyString());
+		System.err.println();
 	}
 
 	/***
@@ -120,15 +120,23 @@ public class Lambda {
 	 * @param O observation sequence
 	 * @return Pair of best suited HMM for O and corresponding logarithmic probability
 	 */
-	public static Pair<Lambda, Double> best(List<Lambda> lambdas, ArrayList<Integer> O) {
+	public static Pair<Integer, Double> best(Lambda[] lambdas, ArrayList<Integer> O) {
+		
 		double bestV = Double.NEGATIVE_INFINITY;
-		Lambda bestA = null;
-		for(Lambda lambda : lambdas){
+		Integer bestA = 0;
+		
+		for(int i = 0; i < lambdas.length; i++){
+			Lambda lambda = lambdas[i];
 			double prob = lambda.forward(O);
-			if(bestV <= prob) { 
-				bestA = lambda;
+			
+			// System.err.print(" " + prob + " " + Math.exp(prob));
+			if(prob == Double.NaN) System.err.println("ALARM __ !!");
+			
+			if(bestV < prob) { 
+				bestA = i;
 			}
 		}
+		// System.err.println(" ");
 		return new Pair<>(bestA, bestV);
 	}
 
@@ -139,25 +147,26 @@ public class Lambda {
 	 */
 	public double forward(ArrayList<Integer> O) {
 
-		int T = O.size();
-		alpha = new double[T][numStates];
+		int numObservations = O.size();
+		alpha = new double[numObservations][numStates];
 
-		scaling_factor = new double[T];
+		scaling_factor = new double[numObservations];
 
 		// compute alpha[0][i]
 		for (int i = 0; i < numStates; i++) {
-			alpha[0][i] = initial_state_dist.get(0, i) * state_emission_prob.get(i, O.get(0));
+			alpha[0][i] = initial_state_dist.get(0, i) * 
+					state_emission_prob.get(i, O.get(0));
 			scaling_factor[0] += alpha[0][i];
 		}
 
 		// scale the alpha[0][i]
-		scaling_factor[0] = (double) ((double) 1d) / scaling_factor[0];
+		scaling_factor[0] = 1.0 / scaling_factor[0];
 		for (int i = 0; i < numStates; i++) {
 			alpha[0][i] *= scaling_factor[0];
 		}
 
 		// compute alpha[t][i]
-		for (int t = 1; t < T; t++) {
+		for (int t = 1; t < numObservations; t++) {
 			for (int i = 0; i < numStates; i++) {
 
 				for (int j = 0; j < numStates; j++) {
@@ -169,14 +178,17 @@ public class Lambda {
 			}
 
 			// scale the alpha[t][i]
-			scaling_factor[t] = (double) ((double) 1) / scaling_factor[t];
+			scaling_factor[t] = 1.0 / scaling_factor[t];
+			if(scaling_factor[t] == Double.NaN) System.err.println("ALARM11");
 			for (int i = 0; i < numStates; i++) {
 				alpha[t][i] *= scaling_factor[t];
 			}
 		}
 
 		// return 1 / Arrays.stream(c).reduce(1, (a, b) -> a * b);
-		return measure();
+		double logProb = measure();
+		if(logProb == Double.NaN) System.err.println("ALARM!!");
+		return logProb;
 	}
 
 	/***
@@ -361,6 +373,10 @@ public class Lambda {
 	 */
 	private double measure() {
 		
+//		for(double d : scaling_factor)
+//			System.err.print(d + " ");
+//		System.err.println();
+		
 		double magic = 0;
 		int T = scaling_factor.length;
 		
@@ -380,12 +396,15 @@ public class Lambda {
 	 */
 	public void optimizeFor(ArrayList<Integer> O) {
 		
-		for(int i = 0; i < 000; i++){
-			forward(O);
-			backward(O);
-			gammas(O);
-			fixit(O);
+		System.err.println("\n Input Seq");
+		
+		for(Integer obs : O){
+			System.err.print(obs + " ");
 		}
+		System.err.println();
+		
+		System.err.println("Before");
+		prettyPrint();
 		
 		int max = 0;
 		double niveau, currniveau = Double.NEGATIVE_INFINITY;
@@ -399,10 +418,30 @@ public class Lambda {
 			currniveau = measure();
 		} while (niveau < currniveau && max < 300);
 		
+		System.err.println("After");
+		prettyPrint();
+		
 //		System.err.println(max);
 //		System.err.flush();
 		
 
+	}
+	
+	/***
+	 * 
+	 * Optimizes the HMM for the given observation sequence
+	 * This operation manipulates this object!
+	 * Like optimizeFor but smoothes the matrixes before to avoid NaN due to 0 in matrix
+	 * 
+	 * @param O observation sequence
+	 */
+	public void train(ArrayList<Integer> O) {
+		state_emission_prob.smooth(0.1);
+		state_emission_prob.smooth(0.1);
+		initial_state_dist.smooth(0.1);
+		
+		this.optimizeFor(O);
+		
 	}
 	
 	
