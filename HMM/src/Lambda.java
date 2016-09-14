@@ -1,3 +1,4 @@
+import java.util.Optional;
 import java.util.Scanner;
 
 /***
@@ -77,6 +78,8 @@ public class Lambda {
 		this.numStates = state_transion_prob.m();
 		this.numEmissions = state_emission_prob.n();
 	}
+	
+	
 
 	public String printA() {
 		return state_transion_prob.toString();
