@@ -11,7 +11,7 @@ public class HMM3 {
 		sc.useLocale(Locale.US);
 		DecimalFormat df = new DecimalFormat("###.0#####", new DecimalFormatSymbols(Locale.US));
 		
-		Lambda lambda = new Lambda(sc);
+		LambdaOld lambda = new LambdaOld(sc);
 		
 		int[] O = new int[sc.nextInt()];
 		for (int i = 0; i < O.length; i++) {

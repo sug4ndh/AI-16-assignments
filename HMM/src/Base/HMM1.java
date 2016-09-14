@@ -18,7 +18,7 @@ public class HMM1 {
 		sc.useLocale(Locale.US);
 		
 		
-		Lambda lambda = new Lambda(sc);
+		LambdaOld lambda = new LambdaOld(sc);
 		
 		lambda.A_step();
 		

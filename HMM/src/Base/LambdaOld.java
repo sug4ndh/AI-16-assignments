@@ -8,7 +8,7 @@ import java.util.Scanner;
  *
  */
 
-public class Lambda {
+public class LambdaOld {
 
 	private Matrix A;
 	private Matrix B;
@@ -24,7 +24,7 @@ public class Lambda {
 	private int N;
 	private int M;
 
-	public Lambda(Matrix A, Matrix B, Matrix pi) {
+	public LambdaOld(Matrix A, Matrix B, Matrix pi) {
 		this.A = A;
 		this.B = B;
 		this.pi = pi;
@@ -32,7 +32,7 @@ public class Lambda {
 		this.M = B.n();
 	}
 	
-	public Lambda(int N, int M) {
+	public LambdaOld(int N, int M) {
 		this.A = new Matrix(N, N, true);
 		this.B = new Matrix(N, M, true);
 		this.pi = new Matrix(1, N, true);
@@ -40,7 +40,7 @@ public class Lambda {
 		this.M = B.n();
 	}
 	
-	public Lambda(int N, int M, Matrix pi) {
+	public LambdaOld(int N, int M, Matrix pi) {
 		this.A = new Matrix(N, N, true);
 		this.B = new Matrix(N, M, true);
 		this.pi = pi;
@@ -53,7 +53,7 @@ public class Lambda {
 	// this.O = O;
 	// }
 
-	public Lambda(Scanner sc) {
+	public LambdaOld(Scanner sc) {
 		this.A = new Matrix(sc);
 		this.B = new Matrix(sc);
 		this.pi = new Matrix(sc);
