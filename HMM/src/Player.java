@@ -94,16 +94,18 @@ class Player {
     
 
     
-    public int[] Observe(Bird a) {
-        int observations[] = new int[a.getSeqLength()];
-        for (int i = 0; i < a.getSeqLength(); i++) {
-            if(a.wasDead(i)){
+      public int[] Observe(Bird bird) {
+        int num_of_state = bird.getSeqLength();
+        int observations[] = new int[num_of_state];
+        for (int state = 0; state < num_of_state; state++) {
+            if(bird.wasDead(state)){
                 continue;
             }
-            observations[i] = a.getObservation(i);
+            observations[state] = bird.getObservation(state);
         }
         return observations;
     }
+    
     
     public int[] guess(GameState pState, Deadline pDue) {
         /*
