@@ -68,10 +68,10 @@ class GameServer
     {
         mMaxRounds = 2;
         mMaxTurns = 100;
-        mTimeForShoot = 2000;
-        mTimeForHit = 200;
+        mTimeForShoot = 20000;
+        mTimeForHit = 20000;
         mTimeForGuess = 10000;
-        mTimeForReveal = 1000;
+        mTimeForReveal = 10000;
         mPlayers = new SPlayer[1];
         mPlayers[0] = new SPlayer(pInputStream, pOutputStream, 0);
     }
