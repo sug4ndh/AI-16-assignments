@@ -113,7 +113,7 @@ public class Lambda {
 	 * 
 	 * @param lambdas HMMs to test
 	 * @param O observation sequence
-	 * @return index of best hmm
+	 * @return index of best HMM
 	 */
 	public static int bestOf(List<Lambda> hmms, ArrayList<Integer> O) {
 		
@@ -134,6 +134,7 @@ public class Lambda {
 			
 			if(bestV < prob) { 
 				bestA = i;
+				bestV = prob;
 			}
 		}
 		// System.err.println(" ");

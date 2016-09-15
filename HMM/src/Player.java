@@ -10,7 +10,7 @@ class Player {
 	
 	final static int ASPECTED_NUM_BIRDS = 20;
 	final static int ASPECTED_NUM_MOVES = 20;
-	final static int ASPECTED_NUM_STATES = 2;
+	final static int ASPECTED_NUM_STATES = 4;
 
 	List<List<Lambda>> hmms;
 	List<List<List<Integer>>> moves;
@@ -84,15 +84,15 @@ class Player {
 	
 		ArrayList<Integer> moves = copyObservations(bird);
 		
-		double currV = 0; // Double.NEGATIVE_INFINITY;
+		double currV = Double.NEGATIVE_INFINITY;
 		int currA = 0;
 		for(int i = 0; i < Constants.COUNT_SPECIES; i++){
 			double var = hmms.get(i).stream().
 					mapToDouble(l -> l.forward(moves)).
-					average().
+					max().
 					orElse(Double.NEGATIVE_INFINITY);
 			// System.err.print(var + " ");
-			if(var < currV){
+			if(var > currV){
 				currA = i;
 				currV = var;
 			}
@@ -160,11 +160,11 @@ class Player {
 			Arrays.fill(lGuess, Constants.SPECIES_PIGEON);
 		} else {
 			for (int i = 0; i < pState.getNumBirds(); i++)
-				lGuess[i] = guess_species(pState.getBird(i));
+				lGuess[i] = majorityGuess(pState.getBird(i));
 		}
 		
-		System.err.println("\n Guessing \n");
-		printSpecies(lGuess);
+//		System.err.println("\nGuessing");
+//		printSpecies(lGuess);
 
 		return lGuess;
 	}
@@ -232,7 +232,7 @@ class Player {
 		System.err.println("\n \n");
 
 		try {
-			TimeUnit.MILLISECONDS.sleep(500);
+			TimeUnit.MILLISECONDS.sleep(200);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -268,17 +268,17 @@ class Player {
 	 */
 	public void reveal(GameState pState, int[] pSpecies, Deadline pDue) {
 		
-		printSpecies(pState, pSpecies);
+		// printSpecies(pState, pSpecies);
 
 		// re-estimate the model after finding the species
 		for (int i = 0; i < pSpecies.length; i++) {
 
-			if (pSpecies[i] != Constants.SPECIES_UNKNOWN) {
+			if (pSpecies[i] != Constants.SPECIES_UNKNOWN || hmms.get(pSpecies[i]).size() > 15) {
 				
 	    		Bird bird = pState.getBird(i);
 	    		
 	    		ArrayList<Integer> bird_moves = copyObservations(bird);
-	    		moves.get(pSpecies[i]).add(bird_moves);
+	    		// moves.get(pSpecies[i]).add(bird_moves);
 
 	    		Lambda birdhmm = new Lambda(ASPECTED_NUM_STATES, Constants.COUNT_MOVE);
 	    		birdhmm.train(bird_moves);
