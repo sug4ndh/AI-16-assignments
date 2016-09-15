@@ -4,6 +4,7 @@ import java.util.*;
  * 
  * @author Daniel Stüwe - used pseudo code from the HMM paper of Mark Stamp
  *
+ * 
  */
 
 public class Lambda {

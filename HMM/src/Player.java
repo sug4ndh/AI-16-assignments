@@ -13,17 +13,17 @@ class Player {
 	final static int ASPECTED_NUM_STATES = 3;
 
 	List<List<Lambda>> hmms;
-	List<List<List<Integer>>> moves;
+//	List<List<List<Integer>>> moves;
 
 	public Player() {
 		
         hmms = new ArrayList<>(Constants.COUNT_SPECIES);
-        moves = new ArrayList<>(Constants.COUNT_SPECIES);
+//        moves = new ArrayList<>(Constants.COUNT_SPECIES);
 
 		for (int i = 0; i < Constants.COUNT_SPECIES; i++) {
 			
             hmms.add(new ArrayList<>(ASPECTED_NUM_BIRDS));
-            moves.add(new ArrayList<>(ASPECTED_NUM_MOVES));
+//            moves.add(new ArrayList<>(ASPECTED_NUM_MOVES));
             
 		}
 	}
@@ -323,10 +323,10 @@ class Player {
 	    		Bird bird = pState.getBird(i);
 	    		
 	    		ArrayList<Integer> bird_moves = copyObservations(bird);
-	    		moves.get(pSpecies[i]).add(bird_moves);
+	    		// moves.get(pSpecies[i]).add(bird_moves);
 
 	    		Lambda birdhmm = new Lambda(ASPECTED_NUM_STATES, Constants.COUNT_MOVE);
-	    		birdhmm.train(bird_moves);
+	    		// birdhmm.train(bird_moves);
 	    		birdhmm.train(bird_moves);
 	    		hmms.get(pSpecies[i]).add(birdhmm);
 	    		
