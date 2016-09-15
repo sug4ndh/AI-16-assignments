@@ -234,7 +234,7 @@ public class Lambda {
 
 			// scale the alpha[t][i]
 			scaling_factor[t] = divide(1.0, scaling_factor[t]);
-			if(scaling_factor[t] == Double.NaN) System.err.println("ALARM11");
+//			if(scaling_factor[t] == Double.NaN) System.err.println("ALARM11");
 			for (int i = 0; i < numStates; i++) {
 				alpha[t][i] *= scaling_factor[t];
 			}
@@ -291,6 +291,7 @@ public class Lambda {
 				int maxA = 0;
 				double maxV = 0;
 				for (int j = 0; j < numStates; j++) {
+					// alpa[t][j] +=
 					double curr = delta[t - 1][j] * state_transion_prob.get(j, i) * state_emission_prob.get(i, O.get(t));
 					if (curr > maxV) {
 						maxV = curr;
@@ -489,7 +490,7 @@ public class Lambda {
 			gammas(O);
 			fixit(O);
 			currniveau = measure();
-		} while (niveau < currniveau && max < 500);
+		} while (niveau < currniveau && max < 100);
 		
 //		System.err.println("After");
 //		prettyPrint();
@@ -512,7 +513,7 @@ public class Lambda {
 
 		this.smooth(0.1);
 		this.optimizeFor(O);
-		this.smooth(0.05);
+		this.smooth(0.02);
 		
 	}
 	

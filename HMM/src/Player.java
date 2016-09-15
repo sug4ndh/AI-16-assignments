@@ -10,7 +10,7 @@ class Player {
 	
 	final static int ASPECTED_NUM_BIRDS = 20;
 	final static int ASPECTED_NUM_MOVES = 20;
-	final static int ASPECTED_NUM_STATES = 4;
+	final static int ASPECTED_NUM_STATES = 3;
 
 	List<List<Lambda>> hmms;
 	List<List<List<Integer>>> moves;
@@ -56,23 +56,35 @@ class Player {
 
     	// Never shoot in the first round, we don't no anything.
 		
-    	if(pState.getRound() == 0) return cDontShoot;
+    	if(pState.getRound() < 7) return cDontShoot;
     	
-//    	int numBirds = pState.getNumBirds();
-//    	
-//    	if(pState.getBird(pState.getNumBirds() -1).getSeqLength() < 50) return cDontShoot;
-//    	
+    	int numBirds = pState.getNumBirds();
+    	
+    	if(pState.getBird(pState.getNumBirds() -1).getSeqLength() < 97) return cDontShoot;
+    	
 //    	for(int i = 0; i < numBirds; i++){
 //    		Bird bird = pState.getBird(i);
 //    		if(bird.isAlive()){
-//    			Lambda hmm = new Lambda(6, Constants.COUNT_MOVE);
+//
 //    			ArrayList<Integer> mov = copyObservations(bird);
+//    			
+//    			int specie = majorityGuess(mov);
+//    			
+//    			if(specie == Constants.SPECIES_BLACK_STORK) continue;
+//    			
+//    			Lambda hmm = new Lambda(6, Constants.COUNT_MOVE);
 //    			hmm.optimizeFor(mov);
 //
 //    			return new Action(i, hmm.nextEmission(mov)); // hmm.nextEmission(mov.size())
 //    		}
 //    	}
     	
+//    	for(int i = 0; i < numBirds; i++){
+//    		Bird bird = pState.getBird(i);
+//    		if(bird.isAlive()){
+//    			return new Action(i, majorityGuessMove(bird));
+//    		}
+//    	}
 
 		return cDontShoot;
 
@@ -80,10 +92,14 @@ class Player {
 		// return Action(0, MOVE_RIGHT);
 	}
 	
-	public int majorityGuess(Bird bird) {
+	private int majorityGuess(Bird bird) {
 	
 		ArrayList<Integer> moves = copyObservations(bird);
 		
+		return majorityGuess(moves);
+	}
+
+	private int majorityGuess(ArrayList<Integer> moves) {
 		double currV = Double.NEGATIVE_INFINITY;
 		int currA = 0;
 		for(int i = 0; i < Constants.COUNT_SPECIES; i++){
@@ -102,6 +118,33 @@ class Player {
 		
 		return currA;
 	}
+	
+	public int majorityGuessMove(Bird bird) {
+		
+		ArrayList<Integer> moves = copyObservations(bird);
+		
+		int specie = majorityGuess(moves);
+		
+		if(specie == Constants.SPECIES_BLACK_STORK) return -1;
+		
+		int[] posMoves = new int[Constants.COUNT_MOVE];
+			
+			hmms.get(specie).stream().
+					mapToInt(l -> l.nextEmission(moves)).
+					forEach(i -> posMoves[i]++);
+
+		int move = 0, score = 0;
+		for(int i = 0; i < Constants.COUNT_MOVE; i++){
+			int newScore = posMoves[i];
+			if(newScore > score){
+				score = newScore;
+				move = i;
+			}
+		}
+		
+		return move;
+	}
+	
 
 	/**
 	 * 
@@ -163,6 +206,8 @@ class Player {
 				lGuess[i] = majorityGuess(pState.getBird(i));
 		}
 		
+		// Arrays.fill(lGuess, Constants.SPECIES_PIGEON);
+		
 //		System.err.println("\nGuessing");
 //		printSpecies(lGuess);
 
@@ -213,7 +258,7 @@ class Player {
 	 *            time before which we must have returned
 	 */
 	public void hit(GameState pState, int pBird, Deadline pDue) {
-		System.err.println("HIT BIRD!!!");
+//		System.err.println("HIT BIRD!!!");
 	}
 
 	@SuppressWarnings("unused")
@@ -278,9 +323,10 @@ class Player {
 	    		Bird bird = pState.getBird(i);
 	    		
 	    		ArrayList<Integer> bird_moves = copyObservations(bird);
-	    		// moves.get(pSpecies[i]).add(bird_moves);
+	    		moves.get(pSpecies[i]).add(bird_moves);
 
 	    		Lambda birdhmm = new Lambda(ASPECTED_NUM_STATES, Constants.COUNT_MOVE);
+	    		birdhmm.train(bird_moves);
 	    		birdhmm.train(bird_moves);
 	    		hmms.get(pSpecies[i]).add(birdhmm);
 	    		
